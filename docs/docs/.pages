@@ -1,0 +1,22 @@
+nav:
+  - Home:
+    - "🏠 Workshop Home": index.md
+  - Getting Started:
+    - "📋 Prerequisites": prerequisites.md
+    - "▶️ Run MCP Servers": running-mcp-servers.md
+    - "🛠️ Build Your Own": developing-your-mcp-server.md
+  - Production Ready:
+    - "✅ Testing": testing.md
+    - "🤖 AI-Assisted Development": ai-assisted-development.md
+    - "🛡️ Resilience": resilience.md
+    - "🚀 CI/CD & Deployment": cicd.md
+  - Gateway & Advanced:
+    - "🔧 ContextForge Gateway": mcp-gateway.md
+    - "🖥️ Register Server": register-server.md
+    - "⚡ Advanced Topics": advanced-topics.md
+    - "🐛 Debugging": debugging.md
+  - Contributing:
+    - "📚 GitHub Guide": github-guide.md
+    - "🤝 Contributing Your Server": contributing.md
+  - Join the Team:
+    - "💼 Careers at ContextForge": join-the-team.md
