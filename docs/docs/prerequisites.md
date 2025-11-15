@@ -69,15 +69,14 @@ Run LLMs locally to test your MCP servers offline:
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Pull IBM Granite 4 model (recommended)
+# Pull IBM Granite 4 model (recommended - 2.1GB)
 ollama pull granite4:3b
 
-# Or try larger variant
-ollama pull granite4:8b
+# Or try larger variant (4.2GB)
+ollama pull granite4:tiny-h
 
-# Or other models
-ollama pull llama3.2
-ollama pull qwen2.5
+# Or the smallest
+ollama pull granite4:350m-h
 ```
 
 **Why Granite 4?** IBM's Granite 4.0 models (released October 2025) feature a breakthrough hybrid Mamba-2/transformer architecture with:
@@ -86,22 +85,14 @@ ollama pull qwen2.5
 - **Apache 2.0 licensed** and ISO 42001 certified
 - **Perfect for local testing** - runs efficiently on laptops
 
-Test your MCP server with Ollama:
-```bash
-# Start your MCP server
-fastmcp run server.py --transport http
-
-# Run Granite 4 in another terminal
-ollama run granite4:3b
-
-# Or use through an MCP-compatible client
-```
 
 ### Learn More
 
+- **[Ollama](https://ollama.com/)** - Run large language models on your laptop!
+- **[Granite 4](https://ollama.com/library/granite4) - LLM that can run anywhere, with 350MB, 700MB, 1.6GB, 1.9GB, 3.3GB, and 19GB vRAM / memory requirement variants available. Can run on CPU or GPU.
 - **[MCP Official Site](https://modelcontextprotocol.io/)** - Protocol overview and getting started
 - **[MCP Specification](https://spec.modelcontextprotocol.io/)** - Technical specification
-- **[FastMCP Docs](https://gofastmcp.com/getting-started/welcome)** - Framework documentation
+- **[FastMCP 2.0 Docs](https://gofastmcp.com/getting-started/welcome)** - Python MCP Framework documentation
 - **[Enterprise MCP Guide](https://ibm.biz/enterprise-ai-with-mcp)** - Production architecture and security
 
 ## 5. Next steps

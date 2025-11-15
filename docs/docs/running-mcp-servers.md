@@ -31,270 +31,37 @@ We'll run a few interesting ones to understand how MCP works.
 
 ---
 
-## 2. Run Your First Server: Echo/Calculator
+## 2. Run Your First Server: Git over stdio
 
 Let's start with a simple server to understand the basics.
 
-### Create a minimal test server
+```
+# Install uv/uvx
+pip install uv # to install uvx, if not already installed
+
+# Run the Git MCP server as stdio
+uvx mcp-server-git
+
+# List capabilities
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"demo","version":"0.0.1"}}}
+```
+
+### 3. Convert stdio to SSE or Streamable HTTP using ContextForge
 
 ```bash
-mkdir ~/mcp-test && cd ~/mcp-test
-```
+# Install ContextForge
+uv pip install mcp-contextforge-gateway
 
-Create `simple_server.py`:
+# Convert stdio to remote streamable HTTP
+python3 -m mcpgateway.translate --stdio "uvx mcp-server-git" --expose-streamable-http --port 9000
 
-```python
-from fastmcp import FastMCP
-
-mcp = FastMCP("demo-server")
-
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    """Add two numbers together."""
-    return a + b
-
-@mcp.tool()
-def echo(text: str) -> str:
-    """Echo text back to you."""
-    return f"You said: {text}"
-
-if __name__ == "__main__":
-    mcp.run()
-```
-
-### Run it with STDIO
-
-```bash
-fastmcp run simple_server.py
-```
-
-The server is now running and waiting for JSON-RPC messages on stdin. Keep it running and open a new terminal.
-
-### Test with the FastMCP client
-
-Create `test_client.py`:
-
-```python
-import asyncio
-from fastmcp import Client
-
-async def main():
-    # Connect to the running server
-    async with Client("simple_server.py") as client:
-        # List available tools
-        tools = await client.list_tools()
-        print(f"\n📋 Available tools:")
-        for tool in tools:
-            print(f"  • {tool.name}: {tool.description}")
-
-        # Call the add tool
-        result = await client.call_tool("add", {"a": 5, "b": 3})
-        print(f"\n🔢 add(5, 3) = {result.content[0].text}")
-
-        # Call the echo tool
-        result = await client.call_tool("echo", {"text": "Hello MCP!"})
-        print(f"\n💬 {result.content[0].text}")
-
-asyncio.run(main())
-```
-
-Run it:
-
-```bash
-uv run python test_client.py
-```
-
-**Expected output:**
-```
-📋 Available tools:
-  • add: Add two numbers together.
-  • echo: Echo text back to you.
-
-🔢 add(5, 3) = 8
-
-💬 You said: Hello MCP!
-```
-
-???+ success "What just happened?"
-    - The server exposed two tools via the MCP protocol
-    - The client discovered them with `list_tools()`
-    - The client called them with `call_tool(name, arguments)`
-    - Everything communicated via JSON-RPC over STDIO
-
----
-
-## 3. Run a Real Server: Synthetic Data Generator
-
-Now let's try a more sophisticated server from the ContextForge collection.
-
-```bash
-cd ~/mcp-context-forge/mcp-servers/python/synthetic_data_server
-```
-
-### Install dependencies
-
-```bash
-uv venv
-source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
-uv pip install -e .
-```
-
-### Run the server (HTTP mode)
-
-```bash
-fastmcp run src/synthetic_data_server/server.py --transport http
-```
-
-The server starts on `http://localhost:8000/mcp`.
-
-### Test it
-
-Create `test_synthetic.py`:
-
-```python
-import asyncio
-from fastmcp import Client
-
-async def main():
-    async with Client("http://localhost:8000/mcp") as client:
-        # List tools
-        tools = await client.list_tools()
-        print(f"\n📋 Found {len(tools)} tools:")
-        for tool in tools[:5]:  # Show first 5
-            print(f"  • {tool.name}")
-
-        # Generate sample data
-        result = await client.call_tool(
-            "generate_sample_data",
-            {
-                "num_rows": 10,
-                "columns": ["name", "age", "email"],
-                "seed": 42
-            }
-        )
-
-        print(f"\n📊 Generated data:\n{result.content[0].text[:500]}")
-
-asyncio.run(main())
-```
-
-Run it:
-
-```bash
-uv run python test_synthetic.py
-```
-
-You should see generated CSV data with names, ages, and emails!
-
----
-
-## 4. Try Data Analysis: CSV Pandas Chat
-
-This server lets you ask questions about CSV data in natural language.
-
-```bash
-cd ~/mcp-context-forge/mcp-servers/python/csv_pandas_chat_server
-uv pip install -e .
-```
-
-### Set up OpenAI (required for this server)
-
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
-
-### Run the server
-
-```bash
-fastmcp run src/csv_pandas_chat_server/server_fastmcp.py --transport http --port 8001
-```
-
-### Test with sample data
-
-Create `test_csv_chat.py`:
-
-```python
-import asyncio
-from fastmcp import Client
-import os
-
-async def main():
-    csv_data = """product,sales,region
-Widget A,1000,North
-Widget B,1500,South
-Widget C,800,East
-Gadget X,2000,West
-Gadget Y,1200,North"""
-
-    async with Client("http://localhost:8001/mcp") as client:
-        # Get CSV info
-        result = await client.call_tool(
-            "get_csv_info",
-            {"csv_content": csv_data}
-        )
-        print(f"\n📊 CSV Info:\n{result.content[0].text[:300]}")
-
-        # Ask a question (requires OpenAI API key)
-        if os.getenv("OPENAI_API_KEY"):
-            result = await client.call_tool(
-                "chat_with_csv",
-                {
-                    "query": "What are the top 3 products by sales?",
-                    "csv_content": csv_data
-                }
-            )
-            print(f"\n💡 Query result:\n{result.content[0].text[:500]}")
-
-asyncio.run(main())
-```
-
-Run it:
-
-```bash
-uv run python test_csv_chat.py
+# .. or legacy SSE
+python3 -m mcpgateway.translate --stdio "uvx mcp-server-git" --expose-sse --port 9000
 ```
 
 ---
 
-## 5. Visualization: Mermaid Diagrams
-
-```bash
-cd ~/mcp-context-forge/mcp-servers/python/mermaid_server
-uv pip install -e .
-fastmcp run src/mermaid_server/server.py --transport http --port 8002
-```
-
-Test it with `test_mermaid.py`:
-
-```python
-import asyncio
-from fastmcp import Client
-
-async def main():
-    async with Client("http://localhost:8002/mcp") as client:
-        # Create a flowchart
-        result = await client.call_tool(
-            "create_diagram",
-            {
-                "diagram_type": "flowchart",
-                "content": """
-                graph TD
-                    A[Start] --> B{Decision}
-                    B -->|Yes| C[Action 1]
-                    B -->|No| D[Action 2]
-                    C --> E[End]
-                    D --> E
-                """
-            }
-        )
-        print(f"\n🎨 Mermaid diagram:\n{result.content[0].text}")
-
-asyncio.run(main())
-```
-
----
-
-## 6. Understanding What You Learned
+## 4. Understanding What You Learned
 
 After running these servers, you now know:
 
@@ -305,7 +72,7 @@ After running these servers, you now know:
 
 ### Two Transport Modes:
 - **STDIO** - Communicate via standard input/output (great for local tools)
-- **HTTP** - Run as a web service (great for remote access, gateways)
+- **HTTP** - Run as a web service (great for remote access, gateways) (SSE available as well, but deprecated)
 
 ### The Client Workflow:
 1. Connect to a server (file path for STDIO, URL for HTTP)
@@ -325,7 +92,7 @@ After running these servers, you now know:
 
 ---
 
-## 7. Quick Reference: Testing Commands
+## 5. Quick Reference: Testing Commands
 
 ### STDIO server (file path)
 ```python
@@ -363,7 +130,7 @@ async with Client(
 
 ---
 
-## 8. Explore More Servers
+## 6. Explore More Servers
 
 The ContextForge collection includes 20+ servers across Python, Go, and other languages:
 
